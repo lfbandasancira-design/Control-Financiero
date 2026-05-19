@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Financiero</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #161616;
+    --card: #1c1c1c;
+    --border: #2a2a2a;
+    --accent-green: #00e57a;
+    --accent-red: #ff4d6d;
+    --accent-gold: #f5c542;
+    --text: #f0f0f0;
+    --muted: #888;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px 0;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.02em;
+  }
+
+  header h1 span { color: var(--accent-gold); }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    padding: 16px 24px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .tab {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .tab.active {
+    color: var(--accent-gold);
+    border-bottom-color: var(--accent-gold);
+  }
+
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .content { padding: 24px; max-width: 900px; margin: 0 auto; }
+
+  /* RESUMEN */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  @media(max-width: 580px) { .summary-grid { grid-template-columns: 1fr; } }
+
+  .summary-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .summary-card.cobrar::before { background: var(--accent-green); }
+  .summary-card.pagar::before { background: var(--accent-red); }
+  .summary-card.balance::before { background: var(--accent-gold); }
+
+  .summary-card .label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .summary-card .amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.7rem;
+    font-weight: 800;
+  }
+
+  .summary-card.cobrar .amount { color: var(--accent-green); }
+  .summary-card.pagar .amount { color: var(--accent-red); }
+  .summary-card.balance .amount { color: var(--accent-gold); }
+
+  .summary-card .sub {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* FORMULARIO */
+  .form-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    margin-bottom: 24px;
+  }
+
+  .form-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  @media(max-width: 540px) { .form-row { grid-template-columns: 1fr; } }
+
+  .form-row.full { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  .field label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .field input, .field select, .field textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.88rem;
+    padding: 10px 14px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent-gold);
+  }
+
+  .field select option { background: #222; }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 11px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+
+  .btn-primary {
+    background: var(--accent-gold);
+    color: #000;
+  }
+  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+  .btn-danger {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--accent-red);
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+  .btn-danger:hover { border-color: var(--accent-red); }
+
+  .btn-success {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--accent-green);
+    padding: 4px 10px;
+    font-size: 0.75rem;
+  }
+  .btn-success:hover { border-color: var(--accent-green); }
+
+  /* LISTA */
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .list-header h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+
+  .badge {
+    background: var(--border);
+    color: var(--muted);
+    font-size: 0.68rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+  }
+
+  .item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: border-color 0.2s;
+  }
+
+  .item:hover { border-color: #3a3a3a; }
+
+  .item.pagado { opacity: 0.55; }
+
+  .item-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-cobrar { background: var(--accent-green); }
+  .dot-pagar { background: var(--accent-red); }
+  .dot-pagado { background: var(--border); }
+
+  .item-info { flex: 1; min-width: 0; }
+
+  .item-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .item-amount {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    flex-shrink: 0;
+    text-align: right;
+  }
+
+  .item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .tag-cobrar { background: rgba(0,229,122,0.12); color: var(--accent-green); }
+  .tag-pagar { background: rgba(255,77,109,0.12); color: var(--accent-red); }
+  .tag-pagado { background: rgba(255,255,255,0.06); color: var(--muted); }
+
+  .empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .section-hidden { display: none; }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+
+  .filter-btn.active-all { border-color: var(--accent-gold); color: var(--accent-gold); }
+  .filter-btn.active-cobrar { border-color: var(--accent-green); color: var(--accent-green); }
+  .filter-btn.active-pagar { border-color: var(--accent-red); color: var(--accent-red); }
+  .filter-btn.active-pagado { border-color: var(--border); color: var(--text); background: var(--border); }
+
+  .export-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+  }
+
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💼 Control <span>Financiero</span></h1>
+  <button class="btn btn-ghost" onclick="exportCSV()" style="font-size:0.75rem;padding:8px 16px;">⬇ Exportar CSV</button>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('resumen')">Resumen</button>
+  <button class="tab" onclick="showTab('nuevo')">+ Nuevo</button>
+  <button class="tab" onclick="showTab('movimientos')">Movimientos</button>
+</div>
+
+<!-- RESUMEN -->
+<div id="tab-resumen" class="content">
+  <div class="summary-grid">
+    <div class="summary-card cobrar">
+      <div class="label">Por Cobrar</div>
+      <div class="amount" id="total-cobrar">$0</div>
+      <div class="sub" id="count-cobrar">0 registros</div>
+    </div>
+    <div class="summary-card pagar">
+      <div class="label">Por Pagar</div>
+      <div class="amount" id="total-pagar">$0</div>
+      <div class="sub" id="count-pagar">0 registros</div>
+    </div>
+    <div class="summary-card balance">
+      <div class="label">Balance Neto</div>
+      <div class="amount" id="total-balance">$0</div>
+      <div class="sub" id="balance-label">diferencia</div>
+    </div>
+  </div>
+
+  <div class="list-header">
+    <h3>Pendientes</h3>
+    <span class="badge" id="badge-pendientes">0</span>
+  </div>
+  <div id="lista-resumen">
+    <div class="empty">No hay movimientos pendientes aún.</div>
+  </div>
+</div>
+
+<!-- NUEVO -->
+<div id="tab-nuevo" class="content section-hidden">
+  <div class="form-card">
+    <h3>Registrar movimiento</h3>
+    <div class="form-row">
+      <div class="field">
+        <label>Tipo</label>
+        <select id="f-tipo" onchange="updateTipoLabel()">
+          <option value="cobrar">Por Cobrar (Cliente)</option>
+          <option value="pagar">Por Pagar (Proveedor)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label id="label-nombre">Nombre del Cliente</label>
+        <input type="text" id="f-nombre" placeholder="Ej. Constructora López">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Concepto</label>
+        <input type="text" id="f-concepto" placeholder="Ej. Comisión venta propiedad">
+      </div>
+      <div class="field">
+        <label>Monto ($)</label>
+        <input type="number" id="f-monto" placeholder="0.00" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label>Fecha de vencimiento</label>
+        <input type="date" id="f-fecha">
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <select id="f-cat">
+          <option value="Inmobiliario">Inmobiliario</option>
+          <option value="Bandas Ancira">Bandas Ancira</option>
+          <option value="Personal">Personal</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="field">
+        <label>Nota (opcional)</label>
+        <input type="text" id="f-nota" placeholder="Referencia, contrato, observación...">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="btn btn-primary" onclick="guardar()">Guardar</button>
+      <button class="btn btn-ghost" onclick="limpiar()">Limpiar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MOVIMIENTOS -->
+<div id="tab-movimientos" class="content section-hidden">
+  <div class="filter-row">
+    <button class="filter-btn active-all" onclick="setFiltro('todos',this)">Todos</button>
+    <button class="filter-btn" onclick="setFiltro('cobrar',this)">Por Cobrar</button>
+    <button class="filter-btn" onclick="setFiltro('pagar',this)">Por Pagar</button>
+    <button class="filter-btn" onclick="setFiltro('pagado',this)">Liquidados</button>
+  </div>
+  <div id="lista-movimientos">
+    <div class="empty">No hay movimientos registrados.</div>
+  </div>
+</div>
+
+<script>
+  let data = JSON.parse(localStorage.getItem('cf_data') || '[]');
+  let filtro = 'todos';
+
+  function save() {
+    localStorage.setItem('cf_data', JSON.stringify(data));
+    renderAll();
+  }
+
+  function fmt(n) {
+    return '$' + parseFloat(n).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function updateTipoLabel() {
+    const t = document.getElementById('f-tipo').value;
+    document.getElementById('label-nombre').textContent = t === 'cobrar' ? 'Nombre del Cliente' : 'Nombre del Proveedor';
+  }
+
+  function guardar() {
+    const tipo = document.getElementById('f-tipo').value;
+    const nombre = document.getElementById('f-nombre').value.trim();
+    const concepto = document.getElementById('f-concepto').value.trim();
+    const monto = parseFloat(document.getElementById('f-monto').value);
+    const fecha = document.getElementById('f-fecha').value;
+    const cat = document.getElementById('f-cat').value;
+    const nota = document.getElementById('f-nota').value.trim();
+
+    if (!nombre || !concepto || isNaN(monto) || monto <= 0) {
+      alert('Por favor llena Nombre, Concepto y Monto.');
+      return;
+    }
+
+    data.push({ id: Date.now(), tipo, nombre, concepto, monto, fecha, cat, nota, liquidado: false });
+    save();
+    limpiar();
+    showTab('resumen');
+  }
+
+  function limpiar() {
+    ['f-nombre','f-concepto','f-monto','f-fecha','f-nota'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+  }
+
+  function liquidar(id) {
+    const item = data.find(d => d.id === id);
+    if (item) { item.liquidado = !item.liquidado; save(); }
+  }
+
+  function eliminar(id) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    data = data.filter(d => d.id !== id);
+    save();
+  }
+
+  function setFiltro(f, btn) {
+    filtro = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.className = 'filter-btn');
+    btn.className = 'filter-btn active-' + f;
+    renderMovimientos();
+  }
+
+  function renderItem(item, showActions=true) {
+    const cls = item.liquidado ? 'pagado' : '';
+    const dotCls = item.liquidado ? 'dot-pagado' : (item.tipo === 'cobrar' ? 'dot-cobrar' : 'dot-pagar');
+    const amtColor = item.liquidado ? 'var(--muted)' : (item.tipo === 'cobrar' ? 'var(--accent-green)' : 'var(--accent-red)');
+    const tagCls = item.liquidado ? 'tag-pagado' : (item.tipo === 'cobrar' ? 'tag-cobrar' : 'tag-pagar');
+    const tagLabel = item.liquidado ? 'Liquidado' : (item.tipo === 'cobrar' ? 'Cobrar' : 'Pagar');
+    const fechaStr = item.fecha ? ` · Vence: ${item.fecha}` : '';
+    const notaStr = item.nota ? ` · ${item.nota}` : '';
+
+    return `<div class="item ${cls}">
+      <div class="item-dot ${dotCls}"></div>
+      <div class="item-info">
+        <div class="item-name">${item.nombre}</div>
+        <div class="item-meta">
+          <span class="tag ${tagCls}">${tagLabel}</span>
+          <span>${item.concepto}</span>
+          <span style="color:#666">${item.cat}${fechaStr}${notaStr}</span>
+        </div>
+      </div>
+      <div class="item-amount" style="color:${amtColor}">${fmt(item.monto)}</div>
+      ${showActions ? `<div class="item-actions">
+        <button class="btn btn-success" onclick="liquidar(${item.id})" title="${item.liquidado?'Reactivar':'Marcar liquidado'}">${item.liquidado?'↩':'✓'}</button>
+        <button class="btn btn-danger" onclick="eliminar(${item.id})" title="Eliminar">✕</button>
+      </div>` : ''}
+    </div>`;
+  }
+
+  function renderAll() {
+    // Totales
+    const pendientes = data.filter(d => !d.liquidado);
+    const cobrar = pendientes.filter(d => d.tipo === 'cobrar');
+    const pagar = pendientes.filter(d => d.tipo === 'pagar');
+    const totalCobrar = cobrar.reduce((s,d)=>s+d.monto,0);
+    const totalPagar = pagar.reduce((s,d)=>s+d.monto,0);
+    const balance = totalCobrar - totalPagar;
+
+    document.getElementById('total-cobrar').textContent = fmt(totalCobrar);
+    document.getElementById('total-pagar').textContent = fmt(totalPagar);
+    document.getElementById('total-balance').textContent = fmt(balance);
+    document.getElementById('count-cobrar').textContent = `${cobrar.length} registro${cobrar.length!==1?'s':''}`;
+    document.getElementById('count-pagar').textContent = `${pagar.length} registro${pagar.length!==1?'s':''}`;
+    document.getElementById('balance-label').textContent = balance >= 0 ? '✓ a tu favor' : '⚠ debes más de lo que cobras';
+    document.getElementById('total-balance').style.color = balance >= 0 ? 'var(--accent-gold)' : 'var(--accent-red)';
+
+    // Resumen lista
+    document.getElementById('badge-pendientes').textContent = pendientes.length;
+    const resumenEl = document.getElementById('lista-resumen');
+    if (pendientes.length === 0) {
+      resumenEl.innerHTML = '<div class="empty">No hay movimientos pendientes aún.</div>';
+    } else {
+      resumenEl.innerHTML = pendientes.slice().reverse().map(d => renderItem(d, false)).join('');
+    }
+
+    renderMovimientos();
+  }
+
+  function renderMovimientos() {
+    let lista = data.slice().reverse();
+    if (filtro === 'cobrar') lista = lista.filter(d => d.tipo==='cobrar' && !d.liquidado);
+    else if (filtro === 'pagar') lista = lista.filter(d => d.tipo==='pagar' && !d.liquidado);
+    else if (filtro === 'pagado') lista = lista.filter(d => d.liquidado);
+
+    const el = document.getElementById('lista-movimientos');
+    el.innerHTML = lista.length === 0
+      ? '<div class="empty">No hay registros con este filtro.</div>'
+      : lista.map(d => renderItem(d, true)).join('');
+  }
+
+  function showTab(name) {
+    ['resumen','nuevo','movimientos'].forEach(t => {
+      document.getElementById('tab-'+t).classList.toggle('section-hidden', t!==name);
+    });
+    document.querySelectorAll('.tab').forEach((btn,i) => {
+      btn.classList.toggle('active', ['resumen','nuevo','movimientos'][i]===name);
+    });
+    if(name==='resumen') renderAll();
+    if(name==='movimientos') renderMovimientos();
+  }
+
+  function exportCSV() {
+    if (data.length === 0) { alert('No hay datos para exportar.'); return; }
+    const headers = ['Tipo','Nombre','Concepto','Monto','Fecha','Categoría','Nota','Estado'];
+    const rows = data.map(d => [
+      d.tipo, d.nombre, d.concepto, d.monto, d.fecha||'', d.cat, d.nota||'', d.liquidado?'Liquidado':'Pendiente'
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v=>`"${v}"`).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+    a.download = 'control-financiero.csv';
+    a.click();
+  }
+
+  // Set today as default date
+  document.getElementById('f-fecha').valueAsDate = new Date();
+
+  renderAll();
+</script>
+</body>
+</html>
